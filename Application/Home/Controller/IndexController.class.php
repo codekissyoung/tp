@@ -7,6 +7,6 @@ class IndexController extends Controller
 {
     public function index()
     {
-        echo "<h1> Hello ThinkPHP</h1>";
+        echo "hello thinkphp";
     }
 }

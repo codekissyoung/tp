@@ -1,28 +1,12 @@
 <?php
-// +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
-// +----------------------------------------------------------------------
-// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
-// +----------------------------------------------------------------------
-// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
-// +----------------------------------------------------------------------
-// | Author: liu21st <liu21st@gmail.com>
-// +----------------------------------------------------------------------
-
-/**
- * ThinkPHP惯例配置文件
- * 该文件请不要修改，如果要覆盖惯例配置的值，可在应用配置文件中设定和惯例不符的配置项
- * 配置名称大小写任意，系统会统一转换成小写
- * 所有配置参数都可以在生效前动态改变
- */
 defined('THINK_PATH') or exit();
 return  array(
     /* 应用设定 */
     'APP_SUB_DOMAIN_DEPLOY' =>  false,   // 是否开启子域名部署
     'APP_SUB_DOMAIN_RULES'  =>  array(), // 子域名部署规则
-    'APP_DOMAIN_SUFFIX'     =>  '', // 域名后缀 如果是com.cn net.cn 之类的后缀必须设置    
-    'ACTION_SUFFIX'         =>  '', // 操作方法后缀
-    'MULTI_MODULE'          =>  true, // 是否允许多模块 如果为false 则必须设置 DEFAULT_MODULE
+    'APP_DOMAIN_SUFFIX'     =>  '',      // 域名后缀 如果是com.cn net.cn 之类的后缀必须设置    
+    'ACTION_SUFFIX'         =>  '',      // 操作方法后缀
+    'MULTI_MODULE'          =>  true,    // 是否允许多模块 如果为false 则必须设置 DEFAULT_MODULE
     'MODULE_DENY_LIST'      =>  array('Common','Runtime'),
 
     /* Cookie设置 */
@@ -159,5 +143,4 @@ return  array(
     'CHECK_APP_DIR'         =>  true,       // 是否检查应用目录是否创建
     'FILE_UPLOAD_TYPE'      =>  'Local',    // 文件上传方式
     'DATA_CRYPT_TYPE'       =>  'Think',    // 数据加密方式
-
 );
