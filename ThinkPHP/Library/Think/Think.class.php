@@ -54,6 +54,7 @@ class Think
         date_default_timezone_set( C('DEFAULT_TIMEZONE') );
         G('loadTime');
 
+        // dump(self::$_map);
         // 8. 启动应用 Think\App::run
         App::run();
     }

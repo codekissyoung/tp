@@ -8,5 +8,5 @@ if(version_compare(PHP_VERSION,'5.3.0','<'))
 define('BUILD_DIR_SECURE', false);          # don't generate index.html
 define('APP_DEBUG', TRUE);                  # debug mode
 define('APP_PATH','./Application/');        # apps dir, only one
-define('RUNTIME_PATH', '/tmp/tp-runtime');  # runtime dir, need writable   
+define('RUNTIME_PATH', '/tmp/tp-runtime/');        # runtime dir, need writable   
 require './ThinkPHP/ThinkPHP.php';
