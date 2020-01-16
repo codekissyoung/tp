@@ -7,6 +7,11 @@ class IndexController extends Controller
 {
     public function index()
     {
-        echo "hello thinkphp";
+        echo "hello thinkphpwwwww";
+    }
+
+    public function deal()
+    {
+        echo "helloDeal";
     }
 }
