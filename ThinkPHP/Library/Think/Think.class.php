@@ -1,73 +1,137 @@
 <?php
+// +----------------------------------------------------------------------
+// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: liu21st <liu21st@gmail.com>
+// +----------------------------------------------------------------------
+
 namespace Think;
+/**
+ * ThinkPHP 引导类
+ */
+class Think {
 
-class Think
-{
-    private static $_map      = array(); // ( 类名 => 文件路径) 的映射
-    private static $_instance = array(); // 实例化对象
+    // 类映射
+    private static $_map      = array();
 
-    static public function start()
-    {
-        spl_autoload_register('Think\Think::autoload');
-        register_shutdown_function('Think\Think::fatalError');
-        set_error_handler('Think\Think::appError');
-        set_exception_handler('Think\Think::appException');
-        
-        Storage::connect( STORAGE_TYPE );
+    // 实例化对象
+    private static $_instance = array();
 
+    /**
+     * 应用程序初始化
+     * @access public
+     * @return void
+     */
+    static public function start() {
+      // 注册AUTOLOAD方法
+      spl_autoload_register('Think\Think::autoload');      
+      // 设定错误和异常处理
+      register_shutdown_function('Think\Think::fatalError');
+      set_error_handler('Think\Think::appError');
+      set_exception_handler('Think\Think::appException');
 
+      // 初始化文件存储方式
+      Storage::connect(STORAGE_TYPE);
 
-        // 根据配置，选中一种应用模式： 默认是 common
-        $mode = include (is_file(CONF_PATH.'core.php') ? CONF_PATH.'core.php' : MODE_PATH.APP_MODE.'.php');
-        
-        // 1. 将这个模式下使用到的 所有公有函数、类 等，全部 include 进来，不走 autoload
-        foreach ($mode['core'] as $file)
-        {
-            include $file;
-        }
+      $runtimefile  = RUNTIME_PATH.APP_MODE.'~runtime.php';
+      if(!APP_DEBUG && Storage::has($runtimefile)){
+          Storage::load($runtimefile);
+      }else{
+          if(Storage::has($runtimefile))
+              Storage::unlink($runtimefile);
+          $content =  '';
+          // 读取应用模式
+          $mode   =   include is_file(CONF_PATH.'core.php')?CONF_PATH.'core.php':MODE_PATH.APP_MODE.'.php';
+          // 加载核心文件
+          foreach ($mode['core'] as $file){
+              if(is_file($file)) {
+                include $file;
+                if(!APP_DEBUG) $content   .= compile($file);
+              }
+          }
 
-        // 2. 加载 该应用模式 下的所有 配置
-        foreach ($mode['config'] as $key => $file)
-        {
-            is_numeric($key) ? C(load_config($file)) : C($key,load_config($file));
-        }
+          // 加载应用模式配置文件
+          foreach ($mode['config'] as $key=>$file){
+              is_numeric($key)?C(load_config($file)):C($key,load_config($file));
+          }
 
-        // 3. 再加载，用户使用 config_APP_MODE.php 方式自定义的 配置
-        if('common' != APP_MODE && is_file(CONF_PATH.'config_'.APP_MODE.CONF_EXT))
-            C(load_config(CONF_PATH.'config_'.APP_MODE.CONF_EXT));  
+          // 读取当前应用模式对应的配置文件
+          if('common' != APP_MODE && is_file(CONF_PATH.'config_'.APP_MODE.CONF_EXT))
+              C(load_config(CONF_PATH.'config_'.APP_MODE.CONF_EXT));  
 
-        // 4. 将配置中定义的 ( 类名 => 类路径 ), 全部加载到，$_map 中，加快类的 autoload 速度
-        if(isset($mode['alias'])) self::addMap( is_array($mode['alias']) ? $mode['alias'] : include $mode['alias'] );
-        if(is_file(CONF_PATH.'alias.php')) self::addMap(include CONF_PATH.'alias.php');
+          // 加载模式别名定义
+          if(isset($mode['alias'])){
+              self::addMap(is_array($mode['alias'])?$mode['alias']:include $mode['alias']);
+          }
 
-        // 5. 加载 行为定义
-        if(isset($mode['tags'])) Hook::import(is_array($mode['tags'])?$mode['tags']:include $mode['tags']);
-        if(is_file(CONF_PATH.'tags.php')) Hook::import(include CONF_PATH.'tags.php');
+          // 加载应用别名定义文件
+          if(is_file(CONF_PATH.'alias.php'))
+              self::addMap(include CONF_PATH.'alias.php');
 
-        // 6. 再加载各种 杂七杂八 的定义
-        C(include THINK_PATH.'Conf/debug.php');
-        if(is_file(CONF_PATH.'debug'.CONF_EXT)) C(include CONF_PATH.'debug'.CONF_EXT);
-        if(APP_STATUS && is_file(CONF_PATH.APP_STATUS.CONF_EXT)) C(include CONF_PATH.APP_STATUS.CONF_EXT);   
+          // 加载模式行为定义
+          if(isset($mode['tags'])) {
+              Hook::import(is_array($mode['tags'])?$mode['tags']:include $mode['tags']);
+          }
 
-        // 7. 设置下时区，加载下语言包 等杂事
-        L(include THINK_PATH.'Lang/'.strtolower(C('DEFAULT_LANG')).'.php');
-        date_default_timezone_set( C('DEFAULT_TIMEZONE') );
-        G('loadTime');
+          // 加载应用行为定义
+          if(is_file(CONF_PATH.'tags.php'))
+              // 允许应用增加开发模式配置定义
+              Hook::import(include CONF_PATH.'tags.php');   
 
-        // dump(self::$_map);
-        // 8. 启动应用 Think\App::run
-        App::run();
+          // 加载框架底层语言包
+          L(include THINK_PATH.'Lang/'.strtolower(C('DEFAULT_LANG')).'.php');
+
+          if(!APP_DEBUG){
+              $content  .=  "\nnamespace { Think\\Think::addMap(".var_export(self::$_map,true).");";
+              $content  .=  "\nL(".var_export(L(),true).");\nC(".var_export(C(),true).');Think\Hook::import('.var_export(Hook::get(),true).');}';
+              Storage::put($runtimefile,strip_whitespace('<?php '.$content));
+          }else{
+            // 调试模式加载系统默认的配置文件
+            C(include THINK_PATH.'Conf/debug.php');
+            // 读取应用调试配置文件
+            if(is_file(CONF_PATH.'debug'.CONF_EXT))
+                C(include CONF_PATH.'debug'.CONF_EXT);           
+          }
+      }
+
+      // 读取当前应用状态对应的配置文件
+      if(APP_STATUS && is_file(CONF_PATH.APP_STATUS.CONF_EXT))
+          C(include CONF_PATH.APP_STATUS.CONF_EXT);   
+
+      // 设置系统时区
+      date_default_timezone_set(C('DEFAULT_TIMEZONE'));
+
+      // 检查应用目录结构 如果不存在则自动创建
+      if(C('CHECK_APP_DIR')) {
+          $module     =   defined('BIND_MODULE') ? BIND_MODULE : C('DEFAULT_MODULE');
+          if(!is_dir(APP_PATH.$module) || !is_dir(LOG_PATH)){
+              // 检测应用目录结构
+              Build::checkDir($module);
+          }
+      }
+
+      // 记录加载文件时间
+      G('loadTime');
+      // 运行应用
+      App::run();
     }
 
+    // 注册classmap
     static public function addMap($class, $map=''){
-        if(is_array($class))
+        if(is_array($class)){
             self::$_map = array_merge(self::$_map, $class);
-        else
+        }else{
             self::$_map[$class] = $map;
+        }        
     }
 
+    // 获取classmap
     static public function getMap($class=''){
-        if( '' === $class) {
+        if(''===$class){
             return self::$_map;
         }elseif(isset(self::$_map[$class])){
             return self::$_map[$class];
@@ -76,15 +140,16 @@ class Think
         }
     }
 
-    public static function autoload($class)
-    {
-        // 使用映射，最块！
-        if(isset(self::$_map[$class]))
-        {
+    /**
+     * 类库自动加载
+     * @param string $class 对象类名
+     * @return void
+     */
+    public static function autoload($class) {
+        // 检查是否存在映射
+        if(isset(self::$_map[$class])) {
             include self::$_map[$class];
-        }
-        elseif( false !== strpos($class,'\\'))
-        {
+        }elseif(false !== strpos($class,'\\')){
           $name           =   strstr($class, '\\', true);
           if(in_array($name,array('Think','Org','Behavior','Com','Vendor')) || is_dir(LIB_PATH.$name)){ 
               // Library目录下面的命名空间自动定位
@@ -102,9 +167,7 @@ class Think
               }
               include $filename;
           }
-        }
-        elseif (!C('APP_USE_NAMESPACE'))
-        {
+        }elseif (!C('APP_USE_NAMESPACE')) {
             // 自动加载的类库层
             foreach(explode(',',C('APP_AUTOLOAD_LAYER')) as $layer){
                 if(substr($class,-strlen($layer))==$layer){
@@ -116,6 +179,7 @@ class Think
             // 根据自动加载路径设置进行尝试搜索
             foreach (explode(',',C('APP_AUTOLOAD_PATH')) as $path){
                 if(import($path.'.'.$class))
+                    // 如果加载类成功则返回
                     return ;
             }
         }
@@ -277,5 +341,4 @@ class Think
             }
         }
     }
-
 }
