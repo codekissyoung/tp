@@ -9,4 +9,9 @@ class IndexController extends Controller
     {
         dump("hello");
     }
+
+    public function deal()
+    {
+        echo "helloDeal";
+    }
 }
