@@ -1,44 +1,58 @@
 <?php
-//phpinfo();
-//
-//exit();
-//$ppid = posix_getpid();
-//
-//echo "master process $ppid running\n";
-//
-//for ( $i = 0; $i < 2; $i++ ){
-//    $pid = pcntl_fork();
-//    switch ($pid) {
-//
-//        case '-1':
-//            echo "fork error";
-//            break;
-//
-//        case '0':
-//            $child_pid = posix_getpid();
-//            cli_set_process_title("php-worker");
-//            $sec = rand(1,10);
-//            echo "worker $child_pid start sleep $sec seconds\n";
-//            sleep($sec);
-//            echo "worker $child_pid exit\n";
-//            exit();
-//            break;
-//    }
-//}
-//
-//cli_set_process_title("php master process");
-//$ret = pcntl_wait($status);
-//
-//echo "ret: $ret , status $status \n";
-//echo "master process exit";
-//
-// THINK_PATH    框架目录
-// STORAGE_TYPE  存储类型（默认为File）
-// APP_MODE      应用模式（默认为common）
 
-define('BUILD_DIR_SECURE', false); # don't generate index.html
-define('APP_DEBUG', true); # debug mode
-define('APP_PATH', './Application/'); # apps dir, only one
-define('RUNTIME_PATH', '/tmp/tp-runtime/'); # runtime dir, need writable
+class emailer{
+    private $sender;
+    private $recipients;
+    private $subject;
+    private $body;
 
+    function __construct($sender)
+    {
+        $this -> sender = $sender;
+        $this -> recipients = [];
+    }
+
+    public function addRecipients($recipient){
+        array_push($this->recipients, $recipient);
+    }
+
+    public function setSubject($subject){
+        $this->subject = $subject;
+    }
+
+    public function setBody($body){
+        $this->body = $body;
+    }
+
+    public function sendEmail(){
+        foreach ($this->recipients as $recipient){
+            $result = mail(
+                $recipient,
+                $this->subject,
+                $this->body,
+                "From : {$this->sender}" );
+            if($result)
+                echo "邮件成功发送到：{$recipient}";
+        }
+    }
+}
+
+function __autoload( $className )
+{
+    echo $className;
+}
+// ------------------------ client code ---------------------------
+
+$emailer = new emailer("1162097842@qq.com");
+
+var_dump($emailer);
+
+//$obj = new MyClass();
+
+exit();
+// --------------------------- ThinkPHP ----------------------------------
+
+define('APP_DEBUG', true); // debug mode
+define('APP_PATH', './Application/'); // apps dir, only one
+define('RUNTIME_PATH', '/tmp/tp-runtime/'); // runtime dir, need writable
 require './ThinkPHP/ThinkPHP.php';
