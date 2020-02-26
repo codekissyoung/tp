@@ -1,15 +1,15 @@
 <?php
-//----------------------------------
-// ThinkPHP公共入口文件
-//----------------------------------
-
-
 $GLOBALS['_beginTime'] = microtime(true); // 记录开始运行时间
+//echo $GLOBALS['_beginTime'];
 define('MEMORY_LIMIT_ON', function_exists('memory_get_usage')); // 记录内存初始使用
+
+//echo MEMORY_LIMIT_ON;
+
 
 if (MEMORY_LIMIT_ON) {
     $GLOBALS['_startUseMems'] = memory_get_usage();
 }
+//exit();
 
 // 版本信息
 const THINK_VERSION = '3.2.3';
