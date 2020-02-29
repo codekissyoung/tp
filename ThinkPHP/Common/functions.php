@@ -885,7 +885,6 @@ function dump($var, $echo = true, $label = null, $strict = true)
         }
     } else {
         ob_start();
-        var_dump($var);
         $output = ob_get_clean();
         if (!extension_loaded('xdebug')) {
             $output = preg_replace('/\]\=\>\n(\s+)/m', '] => ', $output);
@@ -893,7 +892,6 @@ function dump($var, $echo = true, $label = null, $strict = true)
         }
     }
     if ($echo) {
-        echo($output);
         return null;
     } else {
         return $output;

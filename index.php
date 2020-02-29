@@ -1,16 +1,5 @@
 <?php
-
-
-
-
-
-
-
-
-
-
-
-
+echo "hello";
 
 // --------------------------- ThinkPHP ----------------------------------
 define('APP_DEBUG', true); // debug mode
