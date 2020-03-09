@@ -16,10 +16,9 @@ class DealController extends Controller
         // echo "hello Deal";
         dump(C());
         dump(get_defined_constants(true)['user']);
-
         trace($name, "错误", 'ERR');
         $this->show("Hi $name , you are $age old!", "utf-8");
-        $this->display();
+//        $this->display();
     }
 
     public function _after_getDeal()
